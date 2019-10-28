@@ -51,14 +51,7 @@ class news_Reuters:
                 break
             except:
                 continue
-
-        # spider task for the past
-        # if some company has no news even if we don't input date
-        #     set this ticker into the lowest priority list
-        #
-        # else
-        #     if it doesn't have a single news for NN consecutive days, stop iterating dates
-        #     set this ticker into the second-lowest priority list
+s
         ticker_failed = open('./input/news_failed_tickers.csv', 'a+')
         if has_Content > 0:
             missing_days = 0

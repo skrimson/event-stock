@@ -42,13 +42,13 @@ Use NLP to predict stock price movement based on news from Reuters, we need the 
 
 Use the following script to crawl it and format it to our local file
 Note : We can relate the news with company and date, this is more precise than Bloomberg News
-#### 1 Crawling of Data
+### 1 Crawling of Data
 
 ```python
 python crawler_reuters.py 
 ```
 
-Yahoo Finanace is also a great place to collect the data  
+Yahoo Finance is also a great place to collect the data  
 
 ### 2 Word Embedding
 To use our customized word vector, apply GloVe to train word vector from Reuters corpus in NLTK

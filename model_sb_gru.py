@@ -58,9 +58,9 @@ def main():
     print(model.summary())
     # Parameters
     batch_size = 512
-    training_filenames = "../stockFeatures/train.csv"
-    validation_filenames = "../stockFeatures/validation.csv"
-    test_filenames = "../stockFeatures/test.csv"
+    training_filenames = "./input/featureMatrix_train.csv"
+    validation_filenames = "../input/featureMatrix_validation.csv"
+    test_filenames = "../input/featureMatrix_test.csv"
     num_training_samples = 100000
     num_validation_samples = 25000
     num_test_samples = 25000
