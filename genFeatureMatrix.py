@@ -1,3 +1,6 @@
+'''
+Create word vector and label data (featured data)
+'''
 #!/usr/bin/python
 import json
 import os
@@ -40,7 +43,7 @@ def gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words=60, mtype="tes
     #print(input_files)
     current_idx = 2
     dp = {} # only consider one news for a company everyday
-    cnt = 0
+
     #testDates = dateGenerator(100)
     shape = wordEmbedding.shape[1]
     print(shape)
@@ -69,11 +72,9 @@ def gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words=60, mtype="tes
                 line = line.strip().split(',')
                 if len(line) != 6: continue
                 ticker, name, day, headline, body, newsType = line
-                #print("Toshal")
+
                 if ticker not in priceDt: continue # skip if no corresponding company found
                 if day not in priceDt[ticker]: continue # skip if no corresponding date found
-                cnt += 1
-                print(cnt)
                 
                 # 2.1 tokenize headline/body, check if the word belongs to the top words, unify the format of words
                 tokens = nltk.word_tokenize(headline) + nltk.word_tokenize(body)
@@ -85,7 +86,7 @@ def gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words=60, mtype="tes
                     if t not in word2idx: continue
                     sentencesVec = np.hstack((sentencesVec, np.matrix(wordEmbedding[word2idx[t]]).T))
                 features = np.vstack((features, padding(sentencesVec, max_words)))
-                count+=1 # increment news count
+                count += 1 # increment news count
                 labels.append(round(priceDt[ticker][day], 6))
                 
     features = np.array(features)

@@ -67,7 +67,7 @@ def main():
 
     # Training and Validation Set Loader
     my_training_batch_generator = My_Generator(training_filenames, batch_size)
-    my_validation_batch_generator =My_Generator(validation_filenames, batch_size)
+    my_validation_batch_generator = My_Generator(validation_filenames, batch_size)
     my_test_batch_generator = My_Generator(test_filenames,batch_size)
     my_test_batch_generator_one = My_Generator(test_filenames,batch_size)
 
@@ -91,7 +91,7 @@ def main():
     model_json = model.to_json()
     with open("./input/model.json", "w") as json_file:
         json_file.write(model_json)
-# serialize weights to HDF5
+    # serialize weights to HDF5
     model.save_weights("./input/model.h5")
     print("Saved model to disk")
     print(modelHistory.history.keys())
