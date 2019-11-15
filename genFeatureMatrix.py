@@ -8,6 +8,7 @@ import os
 import datetime
 import nltk
 import numpy as np
+import tqdm
 
 def dateGenerator(numdays): # generate N days until now, eg [20151231, 20151230]
     base = datetime.datetime.today()
@@ -40,16 +41,15 @@ def gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words=60, mtype="tes
     # step 2, build feature matrix for training data
     loc = './input/'
     input_files = [f for f in os.listdir(loc) if f.startswith('news_reuters.csv')]
-    #print(input_files)
     current_idx = 2
     dp = {} # only consider one news for a company everyday
 
     #testDates = dateGenerator(100)
     shape = wordEmbedding.shape[1]
-    print(shape)
     features = np.zeros([0, max_words * shape])
-    #print(features.shape)
     labels = []
+
+    print("-----------Generating {} {}-----------".format(mtype, flag))
     
     for file in input_files:
         count = 0 # Not more than 50k news
@@ -102,13 +102,13 @@ def build(wordEmbedding, w2i_file, max_words=60):
     with open(w2i_file) as data_file:
         word2idx = json.load(data_file)
 
-    #gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "train",0)
-    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "validation",0)
-    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "test",0)
+    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "train",0)
+    # gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "validation",0)
+    # gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "test",0)
     # Making Additional Features if required
-    #gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "train",1)
-    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "validation",1)
-    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "test",1)
+    gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "train",1)
+    # gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "validation",1)
+    # gen_FeatureMatrix(wordEmbedding, word2idx, priceDt, max_words, "test",1)
 
 def main(we, w2i_file):
     wordEmbedding = readGlove(we)
