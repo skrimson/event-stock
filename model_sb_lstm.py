@@ -17,6 +17,8 @@ from keras import optimizers
 
 import matplotlib.pyplot as plt
 
+
+# Class determine by value
 def value2int_simple(y):
     label = np.copy(y)
     label[y < 0] = 0
@@ -35,6 +37,24 @@ def My_Generator(fileName,batch_size):
             batchLabels = to_categorical(value2int_simple(batchLabels),num_classes=2).astype("int")
             batchLabels = np.matrix(batchLabels)
             yield batchFeatures,batchLabels
+
+def Encoder_VAE():
+    inputs = Input(shape=input_shape, name='encoder_input')
+    x = Dense(intermediate_dim, activation='relu')(inputs)
+    z_mean = Dense(latent_dim, name='z_mean')(x)
+    z_log_var = Dense(latent_dim, name='z_log_var')(x)
+    z = Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
+
+    encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
+    return encoder
+
+def Decoder_VAE():
+    latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
+    x = Dense(intermediate_dim, activation='relu')(latent_inputs)
+    outputs = Dense(original_dim, activation='sigmoid')(x)
+
+    decoder = Model(latent_inputs, outputs, name='decoder')
+    return decoder
 
 
 def BiLSTM():
