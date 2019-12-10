@@ -4,16 +4,12 @@ import numpy as np
 import operator
 import json
 import pandas as pd
-from keras.models import Sequential, model_from_json
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Dropout
-from keras.layers import Bidirectional
+from keras.models import Sequential, model_from_json, Model
+from keras.layers import Input, Lambda, Dense, Flatten, Dropout, Bidirectional, BatchNormalization, Activation, GRU, LSTM
 from keras.utils import to_categorical
-from keras.layers import BatchNormalization
-from keras.layers import Activation
-from keras.layers import GRU, LSTM
+from keras.losses import binary_crossentropy
 from keras import optimizers
+from keras import backend as K
 
 import matplotlib.pyplot as plt
 
@@ -23,47 +19,47 @@ def value2int_simple(y):
     label = np.copy(y)
     label[y < 0] = 0
     label[y >= 0] = 1
+    # label[y < -0.04] = 0
+    # label[(y < 0 and y >= -0.04)] = 1
+    # label[y >= 0 and y < 0.04] = 2
+    # label[y >= 0.04] = 3
     return label
 
 # Loading 3 miniBatches Together
 # Output: prices -> categorical int
-def My_Generator(fileName,batch_size):
+def My_Generator(fileName, batch_size):
     chunksize = batch_size
     while True:
         for chunk in pd.read_csv(fileName, chunksize=chunksize, sep=" "):
             batchFeatures = np.array(chunk.ix[:,:-1])
             batchFeatures = np.reshape(batchFeatures,(batchFeatures.shape[0],30,100))
             batchLabels = np.matrix(chunk.ix[:,-1]).T
-            batchLabels = to_categorical(value2int_simple(batchLabels),num_classes=2).astype("int")
+            batchLabels = to_categorical(value2int_simple(batchLabels),num_classes=4).astype("int")
             batchLabels = np.matrix(batchLabels)
             yield batchFeatures,batchLabels
 
-def Encoder_VAE():
-    inputs = Input(shape=input_shape, name='encoder_input')
-    x = Dense(intermediate_dim, activation='relu')(inputs)
-    z_mean = Dense(latent_dim, name='z_mean')(x)
-    z_log_var = Dense(latent_dim, name='z_log_var')(x)
-    z = Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
+def sampling(args):
+    """Reparameterization trick by sampling from an isotropic unit Gaussian.
 
-    encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
-    return encoder
+    # Arguments
+        args (tensor): mean and log of variance of Q(z|X)
 
-def Decoder_VAE():
-    latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
-    x = Dense(intermediate_dim, activation='relu')(latent_inputs)
-    outputs = Dense(original_dim, activation='sigmoid')(x)
+    # Returns
+        z (tensor): sampled latent vector
+    """
 
-    decoder = Model(latent_inputs, outputs, name='decoder')
-    return decoder
-
+    z_mean, z_log_var = args
+    batch = K.shape(z_mean)[0]
+    dim = K.int_shape(z_mean)[1]
+    # by default, random_normal has mean = 0 and std = 1.0
+    epsilon = K.random_normal(shape=(batch, dim))
+    return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 def BiLSTM():
     model = Sequential()
-    model.add(Bidirectional(LSTM(128, return_sequences=True) ,input_shape=(30, 100),merge_mode ='ave'))
-    model.add(Bidirectional(LSTM(64, return_sequences=True,activation='relu'),merge_mode ='ave'))
+    model.add(Bidirectional(LSTM(128, return_sequences=True) ,input_shape=(30, 100), merge_mode ='ave'))
+    model.add(Bidirectional(LSTM(64, return_sequences=True, activation='relu'), merge_mode ='ave'))
     model.add(BatchNormalization(axis=-1))
-    # model.add(LSTM(128,return_sequences=True,activation='relu'))
-    # model.add(BatchNormalization(axis=-1))
     model.add(Flatten())
     model.add(Dense(512,activation='relu'))
     model.add(BatchNormalization(axis=-1))
@@ -71,13 +67,15 @@ def BiLSTM():
     model.add(Dense(16,activation='relu'))
     model.add(BatchNormalization(axis=-1))
     model.add(Dense(2, activation='softmax'))
+
     adam = optimizers.adam(lr=0.0003)
+
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['acc'])
+    model.summary()
     return model
 
 def train():
     model = BiLSTM()
-    print(model.summary())
     # Parameters
     batch_size = 512
     training_filenames = "./input/featureMatrix_0_train.csv"
@@ -90,8 +88,8 @@ def train():
     # Training and Validation Set Loader
     my_training_batch_generator = My_Generator(training_filenames, batch_size)
     my_validation_batch_generator = My_Generator(validation_filenames, batch_size)
-    my_test_batch_generator = My_Generator(test_filenames,batch_size)
-    my_test_batch_generator_one = My_Generator(test_filenames,batch_size)
+    my_test_batch_generator = My_Generator(test_filenames, batch_size)
+    my_test_batch_generator_one = My_Generator(test_filenames, batch_size)
 
     print(my_training_batch_generator)
 
