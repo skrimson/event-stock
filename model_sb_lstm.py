@@ -19,10 +19,6 @@ def value2int_simple(y):
     label = np.copy(y)
     label[y < 0] = 0
     label[y >= 0] = 1
-    # label[y < -0.04] = 0
-    # label[(y < 0 and y >= -0.04)] = 1
-    # label[y >= 0 and y < 0.04] = 2
-    # label[y >= 0.04] = 3
     return label
 
 # Loading 3 miniBatches Together
@@ -31,29 +27,12 @@ def My_Generator(fileName, batch_size):
     chunksize = batch_size
     while True:
         for chunk in pd.read_csv(fileName, chunksize=chunksize, sep=" "):
-            batchFeatures = np.array(chunk.ix[:,:-1])
+            batchFeatures = np.array(chunk.iloc[:,:-1])
             batchFeatures = np.reshape(batchFeatures,(batchFeatures.shape[0],30,100))
-            batchLabels = np.matrix(chunk.ix[:,-1]).T
-            batchLabels = to_categorical(value2int_simple(batchLabels),num_classes=4).astype("int")
+            batchLabels = np.matrix(chunk.iloc[:,-1]).T
+            batchLabels = to_categorical(value2int_simple(batchLabels),num_classes=2).astype("int")
             batchLabels = np.matrix(batchLabels)
             yield batchFeatures,batchLabels
-
-def sampling(args):
-    """Reparameterization trick by sampling from an isotropic unit Gaussian.
-
-    # Arguments
-        args (tensor): mean and log of variance of Q(z|X)
-
-    # Returns
-        z (tensor): sampled latent vector
-    """
-
-    z_mean, z_log_var = args
-    batch = K.shape(z_mean)[0]
-    dim = K.int_shape(z_mean)[1]
-    # by default, random_normal has mean = 0 and std = 1.0
-    epsilon = K.random_normal(shape=(batch, dim))
-    return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 def BiLSTM():
     model = Sequential()
@@ -115,6 +94,8 @@ def train():
     model.save_weights("./input/model_lstm.h5")
     print("Saved model to disk")
     print(modelHistory.history.keys())
+
+    # loss
     plt.plot(modelHistory.history['loss'])
     plt.plot(modelHistory.history['val_loss'])
     plt.title('model_loss')
@@ -122,7 +103,14 @@ def train():
     plt.ylabel('loss')
     plt.legend(['train','validation'],loc='upper left')
     plt.savefig("loss_lstm.png")
-    plt.show()
+    # accuracy
+    plt.plot(modelHistory.history['acc'])
+    plt.plot(modelHistory.history['val_acc'])
+    plt.title('model_accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('accuracy')
+    plt.legend(['train','validation'],loc='upper left')
+    plt.savefig("accuracy_lstm.png")
 
 def test():
     batch_size = 512
